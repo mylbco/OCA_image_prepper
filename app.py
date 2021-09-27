@@ -42,16 +42,19 @@ def list_oca_repos():
     and a Submit button.
 
     POST:
-    Selected repositories are being downloaded to "/gh_oca_addons".
-    Run docker-compose once all selected repos have been downloaded.
+    Selected repositories are being downloaded to "./tmp" and then copied over
+    to "./gh_oca_addons". A "Ready!" message will appear once all repos
+    have been copied over.
     """
     if request.method == 'GET':
+        # check if we have a local 'cache'file
         repos_json = './repos.json'
         if os.path.isfile(repos_json):
             with open(repos_json, 'r') as rf:
                 repos = json.loads(rf.read())
 
         else:
+            # If we don't have a local 'cache'file, we need to refresh the data
             url = "https://api.github.com/orgs/OCA/repos?page=1"
             repos = list()
 
@@ -68,6 +71,7 @@ def list_oca_repos():
                 elif resp.status_code == 403:
                     return resp.content
 
+            # Create a local "cache"file
             with open(repos_json, 'w') as rf:
                 rf.write(json.dumps(repos, indent=4))
 
@@ -78,6 +82,7 @@ def list_oca_repos():
 
         import subprocess
 
+        # loop through the list of ssh urls
         for repo in repos.values():
             proc = subprocess.run(
                 f"rm -rf tmp && git  --depth 1 {repo} tmp && cp -rf tmp/* gh_oca_addons && rm -rf tmp",
