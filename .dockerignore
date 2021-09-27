@@ -1,0 +1,7 @@
+.venv/
+templates/
+app.py
+LICENSE
+README.md
+.gitignore
+.dockerignore

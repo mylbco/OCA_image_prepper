@@ -1,0 +1,21 @@
+version: '3.5'
+services:
+  db:
+    image: postgres:11
+    environment:
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+      - POSTGRES_DB=postgres
+    restart: always
+    volumes:
+        - ./postgresql:/var/lib/postgresql/data
+
+  web:
+    image: odoo:14.0
+    depends_on:
+      - db
+    ports:
+      - "8065:8069"
+    volumes:
+      - ./gh_oca_addons:/mnt/extra-addons
+    restart: always
