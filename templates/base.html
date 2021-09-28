@@ -12,7 +12,7 @@
       <tbody>
         {% for r in repos %}
             <tr style="border: 1px solid black">
-              <td style="border: 1px solid black"><input type="checkbox" name="{{ r['name'] }}" value="{{ r['ssh_url'] }}"></td>
+              <td style="border: 1px solid black"><input type="checkbox" name="{{ r['name'] }}" value="{{ r['svn_url'] }}"></td>
               <td style="border: 1px solid black">{{ r['name'] }}</td>
             </tr>
         {% endfor %}

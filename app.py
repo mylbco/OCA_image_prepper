@@ -1,7 +1,15 @@
-import json
+#!/usr/bin/env python
+"""
+OCA image prepper
 
+A small Flask application that let's you pick all available extra addons from
+the OCA that you need for your Odoo test installation.
+"""
+import json
+import shutil
+from io import BytesIO
 from flask import Flask, request, render_template
-from operator import itemgetter
+from zipfile import ZipFile
 import requests
 import os.path
 
@@ -83,19 +91,29 @@ def list_oca_repos():
     if request.method == 'POST':
         repos = request.form
 
-        import subprocess
+        # Download all repos in zip format and extract them in a
+        # temporary directory
+        for repo in repos:
+            url = f"https://github.com/OCA/{repo}/archive/refs/heads/14.0.zip"
+            with requests.get(url) as resp:
+                with ZipFile(BytesIO(resp.content)) as zipf:
+                    zipf.extractall("./tmp/")
 
-        # loop through the list of ssh urls
-        for repo in repos.values():
-            proc = subprocess.run(
-                f"rm -rf tmp && git clone --depth 1 {repo} tmp && cp -rf tmp/* gh_oca_addons && rm -rf tmp",
-                shell=True,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-                )
+            # list of files/patterns that we want to ignore
+            ignore = shutil.ignore_patterns(
+                ".*",
+                "LICENSE",
+                "*.md",
+                "*.txt"
+            )
+            # Copy everything over to "./gh_oca_addons/"
+            shutil.copytree(
+                f"./tmp/{repo}-14.0",
+                "./gh_oca_addons",
+                ignore=ignore,
+                dirs_exist_ok=True
+            )
 
-            if proc.returncode != 0:
-                return proc.stderr
-
+        # clean up
+        shutil.rmtree('tmp', ignore_errors=True)
         return "Ready!"
