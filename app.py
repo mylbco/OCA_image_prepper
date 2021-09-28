@@ -1,6 +1,7 @@
 import json
 
 from flask import Flask, request, render_template
+from operator import itemgetter
 import requests
 import os.path
 
@@ -75,6 +76,7 @@ def list_oca_repos():
             with open(repos_json, 'w') as rf:
                 rf.write(json.dumps(repos, indent=4))
 
+        repos.sort(key=lambda repo: repo['name'])
         return render_template("base.html", repos=repos)
 
     if request.method == 'POST':
