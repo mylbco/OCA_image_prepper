@@ -76,6 +76,7 @@ def list_oca_repos():
             with open(repos_json, 'w') as rf:
                 rf.write(json.dumps(repos, indent=4))
 
+        # sort the list of repos alphabetically by name
         repos.sort(key=lambda repo: repo['name'])
         return render_template("base.html", repos=repos)
 
