@@ -85,7 +85,7 @@ def list_oca_repos():
         # loop through the list of ssh urls
         for repo in repos.values():
             proc = subprocess.run(
-                f"rm -rf tmp && git  --depth 1 {repo} tmp && cp -rf tmp/* gh_oca_addons && rm -rf tmp",
+                f"rm -rf tmp && git clone --depth 1 {repo} tmp && cp -rf tmp/* gh_oca_addons && rm -rf tmp",
                 shell=True,
                 check=True,
                 stdout=subprocess.PIPE,
