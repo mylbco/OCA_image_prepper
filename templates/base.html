@@ -1,19 +1,51 @@
 <!doctype html>
+<head>
+  <title>
+    Select the necessities for your image:
+  </title>
+<style>
+
+table {
+  border: 1px solid black;
+}
+
+thead {
+  border: 1px solid black;
+}
+
+tr {
+  border: 1px solid black;
+}
+
+th {
+  border: 1px solid black;
+}
+
+tbody {
+  border: 1px solid black;
+}
+
+td {
+  border: 1px solid black;
+}
+
+</style>
+</head>
 <body>
   <h1>automated docker image builder to test OCA modules</h1>
   <form method="post">
-    <table style="border: 1px solid black">
-      <thead style="border: 1px solid black">
-        <tr style="border: 1px solid black">
-          <th style="border: 1px solid black">select</th>
-          <th style="border: 1px solid black">repo</th>
+    <table>
+      <thead>
+        <tr>
+          <th>select</th>
+          <th>repo</th>
         </tr>
       </thead>
       <tbody>
         {% for r in repos %}
-            <tr style="border: 1px solid black">
-              <td style="border: 1px solid black"><input type="checkbox" name="{{ r['name'] }}" value="{{ r['svn_url'] }}"></td>
-              <td style="border: 1px solid black">{{ r['name'] }}</td>
+            <tr>
+              <td><input type="checkbox" name="{{ r['name'] }}" value="{{ r['svn_url'] }}"></td>
+              <td>{{ r['name'] }}</td>
             </tr>
         {% endfor %}
       </tbody>
