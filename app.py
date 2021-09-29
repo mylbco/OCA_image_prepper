@@ -7,11 +7,13 @@ the OCA that you need for your Odoo test installation.
 """
 import json
 import shutil
+import re
+import requests
+import os.path
+import yaml
 from io import BytesIO
 from flask import Flask, request, render_template
 from zipfile import ZipFile
-import requests
-import os.path
 
 app = Flask(__name__)
 
@@ -84,36 +86,66 @@ def list_oca_repos():
             with open(repos_json, 'w') as rf:
                 rf.write(json.dumps(repos, indent=4))
 
+        # Get the Odoo version number from the branches
+        url = "https://api.github.com/repos/odoo/odoo/branches"
+        versions = list()
+
+        resp = requests.get(url)
+
+        if resp.status_code == 200:
+            json_resp = resp.json()
+
+            version_rex = "^[0-9]{2}\.[0-9]{1}$"    # match: '00.0'
+            for jr in json_resp:
+                if re.match(version_rex, jr['name']):
+                    versions.append(jr['name'])
+
+        versions.sort(reverse=True)
+
         # sort the list of repos alphabetically by name
         repos.sort(key=lambda repo: repo['name'])
-        return render_template("base.html", repos=repos)
+        return render_template("base.html", repos=repos, versions=versions)
 
     if request.method == 'POST':
         repos = request.form
+        dropdown = request.form['dropdown']
 
         # Download all repos in zip format and extract them in a
         # temporary directory
         for repo in repos:
-            url = f"https://github.com/OCA/{repo}/archive/refs/heads/14.0.zip"
-            with requests.get(url) as resp:
-                with ZipFile(BytesIO(resp.content)) as zipf:
-                    zipf.extractall("./tmp/")
+            if repo != "dropdown":
+                url = f"https://github.com/OCA/{repo}/archive/refs/heads/14.0.zip"
+                with requests.get(url) as resp:
+                    with ZipFile(BytesIO(resp.content)) as zipf:
+                        zipf.extractall("./tmp/")
 
-            # list of files/patterns that we want to ignore
-            ignore = shutil.ignore_patterns(
-                ".*",
-                "LICENSE",
-                "*.md",
-                "*.txt"
-            )
-            # Copy everything over to "./gh_oca_addons/"
-            shutil.copytree(
-                f"./tmp/{repo}-14.0",
-                "./gh_oca_addons",
-                ignore=ignore,
-                dirs_exist_ok=True
-            )
+                # list of files/patterns that we want to ignore
+                ignore = shutil.ignore_patterns(
+                    ".*",
+                    "LICENSE",
+                    "*.md",
+                    "*.txt"
+                )
+                # Copy everything over to "./gh_oca_addons/"
+                shutil.copytree(
+                    f"./tmp/{repo}-14.0",
+                    "./gh_oca_addons",
+                    ignore=ignore,
+                    dirs_exist_ok=True
+                )
 
         # clean up
         shutil.rmtree('tmp', ignore_errors=True)
+
+        # generate our docker-compose.yml
+        with open("dc-base.yml", "r") as y:
+            file = yaml.load(y, yaml.SafeLoader)
+
+        file['services']['web']['image'] = \
+            f"{file['services']['web']['image'].split(':')[0]}:{dropdown}"
+
+        # file = dict(sorted(file.items(), key=lambda x: x[0]))
+        with open("docker-compose.yml", "w") as dc:
+            yaml.dump(file, dc, sort_keys=False)
+
         return "Ready!"

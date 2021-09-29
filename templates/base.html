@@ -34,6 +34,13 @@ td {
 <body>
   <h1>automated docker image builder to test OCA modules</h1>
   <form method="post">
+    <div>
+      <select name="dropdown">
+          {% for version in versions %}
+          <option value="{{version}}">{{version}}</option>"
+          {% endfor %}
+      </select>
+    </div>
     <table>
       <thead>
         <tr>
